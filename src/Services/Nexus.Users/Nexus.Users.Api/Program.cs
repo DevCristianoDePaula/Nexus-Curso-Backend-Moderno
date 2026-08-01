@@ -44,6 +44,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Habilita a autorizacao baseada em politicas/claims (usado com [Authorize] ou RequireAuthorization())
 builder.Services.AddAuthorization();
+// Endpoint de health check para monitoramento
+builder.Services.AddHealthChecks();
 
 // ============================================================
 // CONSTRUCAO DA APLICACAO E MIDDLEWARE PIPELINE
@@ -67,6 +69,7 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health");
 
 var auth = app.MapGroup("/api/auth");
 

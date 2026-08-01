@@ -16,6 +16,8 @@ builder.Services.AddCartInfrastructure(builder.Configuration);
 builder.Services.AddNexusObservability("Nexus.Cart.Api");
 // Gera documentacao OpenAPI automaticamente para os endpoints
 builder.Services.AddOpenApi();
+// Endpoint de health check para monitoramento
+builder.Services.AddHealthChecks();
 
 // ============================================================
 // CONSTRUCAO DA APLICACAO E MIDDLEWARE PIPELINE
@@ -26,6 +28,7 @@ var app = builder.Build();
 // Disponibiliza a documentacao OpenAPI e a interface interativa Scalar
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.MapHealthChecks("/health");
 
 // ============================================================
 // ENDPOINTS DO CARRINHO - Grupo /api/cart

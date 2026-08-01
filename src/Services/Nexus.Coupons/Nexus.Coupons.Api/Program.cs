@@ -16,6 +16,8 @@ builder.Services.AddCouponsInfrastructure(builder.Configuration);
 builder.Services.AddNexusObservability("Nexus.Coupons.Api");
 // Habilita documentacao OpenAPI
 builder.Services.AddOpenApi();
+// Endpoint de health check para monitoramento
+builder.Services.AddHealthChecks();
 
 // ============================================================
 // CONSTRUCAO DA APLICACAO E MIDDLEWARE PIPELINE
@@ -25,6 +27,7 @@ var app = builder.Build();
 
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.MapHealthChecks("/health");
 
 // ============================================================
 // ENDPOINTS DE CUPONS - Grupo /api/coupons

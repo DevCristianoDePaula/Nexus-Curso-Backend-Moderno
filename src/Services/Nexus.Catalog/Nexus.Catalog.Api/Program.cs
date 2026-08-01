@@ -18,6 +18,8 @@ builder.Services.AddScoped<CatalogService>();
 builder.Services.AddNexusObservability("Nexus.Catalog.Api");
 // Habilita a geracao automatica da documentacao OpenAPI (Swagger)
 builder.Services.AddOpenApi();
+// Endpoint de health check para monitoramento
+builder.Services.AddHealthChecks();
 
 // ============================================================
 // CONSTRUCAO DA APLICACAO E MIDDLEWARE PIPELINE
@@ -28,6 +30,7 @@ var app = builder.Build();
 // Disponibiliza o endpoint /openapi/v1.json e a interface Scalar para testar as APIs
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.MapHealthChecks("/health");
 
 // ============================================================
 // ENDPOINTS DO CATALOGO - Grupo /api/products

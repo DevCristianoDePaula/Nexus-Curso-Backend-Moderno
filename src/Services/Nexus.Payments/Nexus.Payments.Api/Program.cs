@@ -16,6 +16,8 @@ builder.Services.AddPaymentsInfrastructure(builder.Configuration);
 builder.Services.AddNexusObservability("Nexus.Payments.Api");
 // Habilita documentacao OpenAPI
 builder.Services.AddOpenApi();
+// Endpoint de health check para monitoramento
+builder.Services.AddHealthChecks();
 
 // ============================================================
 // CONSTRUCAO DA APLICACAO E MIDDLEWARE PIPELINE
@@ -25,6 +27,7 @@ var app = builder.Build();
 
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.MapHealthChecks("/health");
 
 // ============================================================
 // ENDPOINTS DE PAGAMENTOS - Grupo /api/payments
