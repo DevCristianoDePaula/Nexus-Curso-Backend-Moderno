@@ -1,0 +1,295 @@
+# Nexus Ecommerce - Docker Compose
+# Ambiente de desenvolvimento completo
+# Uso: docker compose up -d
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: nexus-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Nexus@2026#
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Nexus@2026# -C -Q "SELECT 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:8
+    container_name: nexus-mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=nexus
+      - MONGO_INITDB_ROOT_PASSWORD=Nexus@2026#
+      - MONGO_INITDB_DATABASE=nexus_catalog
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongodb://nexus:Nexus@2026#@localhost:27017 --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    container_name: nexus-redis
+    command: redis-server --requirepass Nexus@2026#
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: redis-cli -a Nexus@2026# ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: nexus-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=nexus
+      - RABBITMQ_DEFAULT_PASS=Nexus@2026#
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: nexus-minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=nexus
+      - MINIO_ROOT_PASSWORD=Nexus@2026#
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: curl -f http://localhost:9000/minio/health/live
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1
+    container_name: nexus-meilisearch
+    environment:
+      - MEILI_MASTER_KEY=Nexus@2026#
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: curl -f http://localhost:7700/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  seq:
+    image: datalust/seq:latest
+    container_name: nexus-seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:5341"   # Ingestão
+      - "8081:80"     # UI
+    volumes:
+      - seq_data:/data
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: nexus-otel
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "4317:4317"   # gRPC
+      - "4318:4318"   # HTTP
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nexus-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nexus-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=Nexus@2026#
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  # ── Application Services ──────────────────────────────────────────
+
+  catalog-api:
+    build:
+      context: .
+      dockerfile: src/Services/Nexus.Catalog/Nexus.Catalog.Api/Dockerfile
+    container_name: nexus-catalog
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDbSettings__ConnectionString=mongodb://nexus:Nexus@2026#@mongo:27017
+      - MongoDbSettings__DatabaseName=nexus_catalog
+      - RedisSettings__ConnectionString=redis:6379,password=Nexus@2026#
+      - MeilisearchSettings__Url=http://meilisearch:7700
+      - MeilisearchSettings__ApiKey=Nexus@2026#
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+    ports:
+      - "5001:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  users-api:
+    build:
+      context: .
+      dockerfile: src/Services/Nexus.Users/Nexus.Users.Api/Dockerfile
+    container_name: nexus-users
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=NexusUsers;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True
+      - JwtSettings__SecretKey=super-secret-key-nexus-ecommerce-2026-must-be-32-chars!
+      - JwtSettings__Issuer=Nexus
+      - JwtSettings__Audience=Nexus
+      - JwtSettings__ExpirationInMinutes=60
+    ports:
+      - "5002:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  cart-api:
+    build:
+      context: .
+      dockerfile: src/Services/Nexus.Cart/Nexus.Cart.Api/Dockerfile
+    container_name: nexus-cart
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - RedisSettings__ConnectionString=redis:6379,password=Nexus@2026#
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+    ports:
+      - "5003:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  orders-api:
+    build:
+      context: .
+      dockerfile: src/Services/Nexus.Orders/Nexus.Orders.Api/Dockerfile
+    container_name: nexus-orders
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=NexusOrders;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+    ports:
+      - "5004:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payments-api:
+    build:
+      context: .
+      dockerfile: src/Services/Nexus.Payments/Nexus.Payments.Api/Dockerfile
+    container_name: nexus-payments
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+      - PaymentsSettings__IsSandbox=true
+    ports:
+      - "5005:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  coupons-api:
+    build:
+      context: .
+      dockerfile: src/Services/Nexus.Coupons/Nexus.Coupons.Api/Dockerfile
+    container_name: nexus-coupons
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDbSettings__ConnectionString=mongodb://nexus:Nexus@2026#@mongo:27017
+      - MongoDbSettings__DatabaseName=nexus_coupons
+      - RedisSettings__ConnectionString=redis:6379,password=Nexus@2026#
+    ports:
+      - "5006:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: src/Gateway/Nexus.Gateway.Api/Dockerfile
+    container_name: nexus-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ReverseProxy__Clusters__catalog__Destinations__d1__Address=http://catalog-api:8080
+      - ReverseProxy__Clusters__users__Destinations__d1__Address=http://users-api:8080
+      - ReverseProxy__Clusters__cart__Destinations__d1__Address=http://cart-api:8080
+      - ReverseProxy__Clusters__orders__Destinations__d1__Address=http://orders-api:8080
+      - ReverseProxy__Clusters__payments__Destinations__d1__Address=http://payments-api:8080
+      - ReverseProxy__Clusters__coupons__Destinations__d1__Address=http://coupons-api:8080
+    ports:
+      - "5000:8080"
+    depends_on:
+      - catalog-api
+      - users-api
+      - cart-api
+      - orders-api
+      - payments-api
+      - coupons-api
+
+volumes:
+  sqlserver_data:
+  mongo_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  meilisearch_data:
+  seq_data:
+  prometheus_data:
+  grafana_data:

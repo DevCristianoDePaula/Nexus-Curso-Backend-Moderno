@@ -1,0 +1,80 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore Nexus.slnx
+
+      - name: Build
+        run: dotnet build Nexus.slnx -c Release --no-restore -warnaserror
+
+      - name: Test (Unit)
+        run: dotnet test Nexus.slnx -c Release --no-build --filter "FullyQualifiedName~Domain" --logger "trx"
+
+      - name: Test (Integration)
+        run: dotnet test Nexus.slnx -c Release --no-build --filter "FullyQualifiedName~Integration" --logger "trx"
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults/*.trx"
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        include:
+          - name: catalog-api
+            dockerfile: src/Services/Nexus.Catalog/Nexus.Catalog.Api/Dockerfile
+          - name: users-api
+            dockerfile: src/Services/Nexus.Users/Nexus.Users.Api/Dockerfile
+          - name: cart-api
+            dockerfile: src/Services/Nexus.Cart/Nexus.Cart.Api/Dockerfile
+          - name: orders-api
+            dockerfile: src/Services/Nexus.Orders/Nexus.Orders.Api/Dockerfile
+          - name: payments-api
+            dockerfile: src/Services/Nexus.Payments/Nexus.Payments.Api/Dockerfile
+          - name: coupons-api
+            dockerfile: src/Services/Nexus.Coupons/Nexus.Coupons.Api/Dockerfile
+          - name: gateway-api
+            dockerfile: src/Gateway/Nexus.Gateway.Api/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.name }}:latest

@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Nexus.Shared.Kernel/Nexus.Shared.Kernel.csproj" />
+    <Project Path="src/BuildingBlocks/Nexus.Shared.Messaging/Nexus.Shared.Messaging.csproj" />
+    <Project Path="src/BuildingBlocks/Nexus.Shared.Observability/Nexus.Shared.Observability.csproj" />
+  </Folder>
+  <Folder Name="/src/Gateway/">
+    <Project Path="src/Gateway/Nexus.Gateway.Api/Nexus.Gateway.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/">
+    <Project Path="src/Services/Nexus.Catalog/Nexus.Catalog.Api/Nexus.Catalog.Api.csproj" />
+    <Project Path="src/Services/Nexus.Catalog/Nexus.Catalog.Application/Nexus.Catalog.Application.csproj" />
+    <Project Path="src/Services/Nexus.Catalog/Nexus.Catalog.Domain/Nexus.Catalog.Domain.csproj" />
+    <Project Path="src/Services/Nexus.Catalog/Nexus.Catalog.Infrastructure/Nexus.Catalog.Infrastructure.csproj" />
+    <Project Path="src/Services/Nexus.Users/Nexus.Users.Api/Nexus.Users.Api.csproj" />
+    <Project Path="src/Services/Nexus.Users/Nexus.Users.Application/Nexus.Users.Application.csproj" />
+    <Project Path="src/Services/Nexus.Users/Nexus.Users.Domain/Nexus.Users.Domain.csproj" />
+    <Project Path="src/Services/Nexus.Users/Nexus.Users.Infrastructure/Nexus.Users.Infrastructure.csproj" />
+    <Project Path="src/Services/Nexus.Cart/Nexus.Cart.Api/Nexus.Cart.Api.csproj" />
+    <Project Path="src/Services/Nexus.Cart/Nexus.Cart.Application/Nexus.Cart.Application.csproj" />
+    <Project Path="src/Services/Nexus.Cart/Nexus.Cart.Domain/Nexus.Cart.Domain.csproj" />
+    <Project Path="src/Services/Nexus.Cart/Nexus.Cart.Infrastructure/Nexus.Cart.Infrastructure.csproj" />
+    <Project Path="src/Services/Nexus.Orders/Nexus.Orders.Api/Nexus.Orders.Api.csproj" />
+    <Project Path="src/Services/Nexus.Orders/Nexus.Orders.Application/Nexus.Orders.Application.csproj" />
+    <Project Path="src/Services/Nexus.Orders/Nexus.Orders.Domain/Nexus.Orders.Domain.csproj" />
+    <Project Path="src/Services/Nexus.Orders/Nexus.Orders.Infrastructure/Nexus.Orders.Infrastructure.csproj" />
+    <Project Path="src/Services/Nexus.Payments/Nexus.Payments.Api/Nexus.Payments.Api.csproj" />
+    <Project Path="src/Services/Nexus.Payments/Nexus.Payments.Application/Nexus.Payments.Application.csproj" />
+    <Project Path="src/Services/Nexus.Payments/Nexus.Payments.Domain/Nexus.Payments.Domain.csproj" />
+    <Project Path="src/Services/Nexus.Payments/Nexus.Payments.Infrastructure/Nexus.Payments.Infrastructure.csproj" />
+    <Project Path="src/Services/Nexus.Coupons/Nexus.Coupons.Api/Nexus.Coupons.Api.csproj" />
+    <Project Path="src/Services/Nexus.Coupons/Nexus.Coupons.Application/Nexus.Coupons.Application.csproj" />
+    <Project Path="src/Services/Nexus.Coupons/Nexus.Coupons.Domain/Nexus.Coupons.Domain.csproj" />
+    <Project Path="src/Services/Nexus.Coupons/Nexus.Coupons.Infrastructure/Nexus.Coupons.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Nexus.Tests/Nexus.Tests.csproj" />
+  </Folder>
+</Solution>

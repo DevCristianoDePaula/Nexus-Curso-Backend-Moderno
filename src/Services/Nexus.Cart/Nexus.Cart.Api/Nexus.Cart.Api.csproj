@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageReference Include="Microsoft.OpenApi" Version="3.9.0" />
+    <PackageReference Include="OpenTelemetry.Api" Version="1.17.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.16" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nexus.Cart.Infrastructure\Nexus.Cart.Infrastructure.csproj" />
+    <ProjectReference Include="..\Nexus.Cart.Application\Nexus.Cart.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Nexus.Shared.Observability\Nexus.Shared.Observability.csproj" />
+  </ItemGroup>
+
+</Project>

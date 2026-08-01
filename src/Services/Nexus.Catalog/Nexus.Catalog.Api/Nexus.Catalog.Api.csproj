@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageReference Include="Microsoft.OpenApi" Version="3.9.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.10.0" />
+    <PackageReference Include="OpenTelemetry.Api" Version="1.17.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.16" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nexus.Catalog.Infrastructure\Nexus.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\Nexus.Catalog.Application\Nexus.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Nexus.Shared.Observability\Nexus.Shared.Observability.csproj" />
+  </ItemGroup>
+
+</Project>
