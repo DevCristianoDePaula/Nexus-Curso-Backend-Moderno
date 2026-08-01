@@ -25,6 +25,15 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+// Garante que o banco de dados exista em ambiente de desenvolvimento
+// (nao ha migrations formais neste projeto ainda)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<Nexus.Orders.Infrastructure.NexusOrderDbContext>();
+    dbContext.Database.EnsureCreated();
+}
+
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapHealthChecks("/health");

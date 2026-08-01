@@ -16,6 +16,8 @@ RUN dotnet publish -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 COPY --from=build /app .
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Nexus.Users.Api.dll"]

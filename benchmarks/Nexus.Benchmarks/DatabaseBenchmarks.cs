@@ -11,7 +11,7 @@ namespace Nexus.Benchmarks;
 public class DatabaseBenchmarks
 {
     private const string SqlConnectionString = "Server=localhost;Database=Nexus_Benchmarks;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True;";
-    private const string MongoConnectionString = "mongodb://nexus:Nexus@2026#@localhost:27017";
+    private const string MongoConnectionString = "mongodb://nexus:Nexus%402026%23@localhost:27017";
     private SqlConnection _sqlConnection;
     private BenchmarksDbContext _efContext;
     private IMongoCollection<BenchmarkProduct> _mongoCollection;

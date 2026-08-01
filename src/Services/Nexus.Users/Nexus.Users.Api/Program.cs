@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Nexus.Shared.Observability;
 using Nexus.Users.Application;
@@ -53,6 +54,23 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+// Garante que o banco de dados exista em ambiente de desenvolvimento
+// (nao ha migrations formais neste projeto ainda)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<Nexus.Users.Infrastructure.NexusIdentityDbContext>();
+    dbContext.Database.EnsureCreated();
+
+    // Seed das roles (Customer, Seller, Admin) usadas pelo AuthService.RegisterAsync
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    foreach (var roleName in Enum.GetNames<Nexus.Users.Domain.UserType>())
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+    }
+}
+
 // Security Headers (OWASP)
 app.Use(async (ctx, next) =>
 {
@@ -61,7 +79,14 @@ app.Use(async (ctx, next) =>
     ctx.Response.Headers["X-XSS-Protection"] = "1; mode=block";
     ctx.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     ctx.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
-    ctx.Response.Headers["Content-Security-Policy"] = "default-src 'self'";
+
+    // A UI do Scalar (/scalar) precisa de script inline e recursos externos (CDN);
+    // um CSP restritivo ("default-src 'self'") bloqueia a inicializacao e deixa a pagina em branco.
+    if (!ctx.Request.Path.StartsWithSegments("/scalar"))
+    {
+        ctx.Response.Headers["Content-Security-Policy"] = "default-src 'self'";
+    }
+
     await next();
 });
 

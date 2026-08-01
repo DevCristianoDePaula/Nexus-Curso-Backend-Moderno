@@ -22,7 +22,7 @@ public static class ServiceRegistration
         this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("MongoDb")
-            ?? "mongodb://nexus:Nexus@2026#@localhost:27017";
+            ?? "mongodb://nexus:Nexus%402026%23@localhost:27017";
 
         services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
         services.AddScoped(sp =>

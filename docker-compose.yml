@@ -32,7 +32,7 @@ services:
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh mongodb://nexus:Nexus@2026#@localhost:27017 --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh --host localhost --username nexus --password 'Nexus@2026#' --authenticationDatabase admin --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
     container_name: nexus-redis
     command: redis-server --requirepass Nexus@2026#
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -58,8 +58,8 @@ services:
       - RABBITMQ_DEFAULT_USER=nexus
       - RABBITMQ_DEFAULT_PASS=Nexus@2026#
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672"  # Management UI
+      - "5673:5672"   # AMQP
+      - "15673:15672"  # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -76,8 +76,8 @@ services:
       - MINIO_ROOT_USER=nexus
       - MINIO_ROOT_PASSWORD=Nexus@2026#
     ports:
-      - "9000:9000"   # API S3
-      - "9001:9001"   # Console
+      - "9020:9000"   # API S3
+      - "9021:9001"   # Console
     volumes:
       - minio_data:/data
     healthcheck:
@@ -107,8 +107,8 @@ services:
     environment:
       - ACCEPT_EULA=Y
     ports:
-      - "5341:5341"   # Ingestão
-      - "8081:80"     # UI
+      - "5342:5341"   # Ingestão
+      - "8082:80"     # UI
     volumes:
       - seq_data:/data
 
@@ -151,12 +151,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - MongoDbSettings__ConnectionString=mongodb://nexus:Nexus@2026#@mongo:27017
-      - MongoDbSettings__DatabaseName=nexus_catalog
-      - RedisSettings__ConnectionString=redis:6379,password=Nexus@2026#
+      - ConnectionStrings__MongoDb=mongodb://nexus:Nexus%402026%23@mongo:27017
+      - ConnectionStrings__Redis=redis:6379,password=Nexus@2026#
       - MeilisearchSettings__Url=http://meilisearch:7700
       - MeilisearchSettings__ApiKey=Nexus@2026#
-      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus%402026%23@rabbitmq:5672
     ports:
       - "5001:8080"
     depends_on:
@@ -177,7 +176,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=NexusUsers;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True
+      - ConnectionStrings__UsersDb=Server=sqlserver;Database=Nexus_Users;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True
       - JwtSettings__SecretKey=super-secret-key-nexus-ecommerce-2026-must-be-32-chars!
       - JwtSettings__Issuer=Nexus
       - JwtSettings__Audience=Nexus
@@ -196,8 +195,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - RedisSettings__ConnectionString=redis:6379,password=Nexus@2026#
-      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379,password=Nexus@2026#
     ports:
       - "5003:8080"
     depends_on:
@@ -214,8 +212,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=NexusOrders;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True
-      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+      - ConnectionStrings__OrdersDb=Server=sqlserver;Database=Nexus_Orders;User Id=sa;Password=Nexus@2026#;TrustServerCertificate=True
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus%402026%23@rabbitmq:5672
     ports:
       - "5004:8080"
     depends_on:
@@ -232,11 +230,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus@2026#@rabbitmq:5672
+      - ConnectionStrings__MongoDb=mongodb://nexus:Nexus%402026%23@mongo:27017
+      - RabbitMqSettings__ConnectionString=amqp://nexus:Nexus%402026%23@rabbitmq:5672
       - PaymentsSettings__IsSandbox=true
     ports:
       - "5005:8080"
     depends_on:
+      mongo:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -248,9 +249,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - MongoDbSettings__ConnectionString=mongodb://nexus:Nexus@2026#@mongo:27017
-      - MongoDbSettings__DatabaseName=nexus_coupons
-      - RedisSettings__ConnectionString=redis:6379,password=Nexus@2026#
+      - ConnectionStrings__MongoDb=mongodb://nexus:Nexus%402026%23@mongo:27017
+      - ConnectionStrings__Redis=redis:6379,password=Nexus@2026#
     ports:
       - "5006:8080"
     depends_on:
@@ -267,14 +267,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ReverseProxy__Clusters__catalog__Destinations__d1__Address=http://catalog-api:8080
-      - ReverseProxy__Clusters__users__Destinations__d1__Address=http://users-api:8080
-      - ReverseProxy__Clusters__cart__Destinations__d1__Address=http://cart-api:8080
-      - ReverseProxy__Clusters__orders__Destinations__d1__Address=http://orders-api:8080
-      - ReverseProxy__Clusters__payments__Destinations__d1__Address=http://payments-api:8080
-      - ReverseProxy__Clusters__coupons__Destinations__d1__Address=http://coupons-api:8080
+      - ReverseProxy__Clusters__catalog__Destinations__catalog__Address=http://catalog-api:8080
+      - ReverseProxy__Clusters__users__Destinations__users__Address=http://users-api:8080
+      - ReverseProxy__Clusters__cart__Destinations__cart__Address=http://cart-api:8080
+      - ReverseProxy__Clusters__orders__Destinations__orders__Address=http://orders-api:8080
+      - ReverseProxy__Clusters__payments__Destinations__payments__Address=http://payments-api:8080
+      - ReverseProxy__Clusters__coupons__Destinations__coupons__Address=http://coupons-api:8080
     ports:
-      - "5000:8080"
+      - "5010:8080"
     depends_on:
       - catalog-api
       - users-api

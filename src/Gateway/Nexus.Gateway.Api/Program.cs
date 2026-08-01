@@ -95,7 +95,19 @@ var app = builder.Build();
 app.UseCors();                                          // Habilita CORS
 app.UseRateLimiter();                                   // Habilita limitacao de taxa
 app.MapOpenApi();                                       // Endpoint /openapi/v1.json
-app.MapScalarApiReference();                            // Interface interativa para testar endpoints
+app.MapScalarApiReference(options =>
+{
+    // Agrega os documentos OpenAPI de todos os microservicos (proxied pelo YARP)
+    // para que o Scalar exiba todos os endpoints (incluindo login/register) em /scalar/v1
+    options
+        .AddDocument("v1", "Gateway")
+        .AddDocument("users", "Users (Auth)", "/openapi/users.json")
+        .AddDocument("catalog", "Catalog", "/openapi/catalog.json")
+        .AddDocument("cart", "Cart", "/openapi/cart.json")
+        .AddDocument("orders", "Orders", "/openapi/orders.json")
+        .AddDocument("payments", "Payments", "/openapi/payments.json")
+        .AddDocument("coupons", "Coupons", "/openapi/coupons.json");
+});
 app.MapReverseProxy();                                  // Habilita o proxy reverso (YARP)
 app.MapHealthChecks("/health");                         // Endpoint /health para verificacao de saude
 

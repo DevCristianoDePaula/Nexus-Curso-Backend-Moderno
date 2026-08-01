@@ -26,7 +26,7 @@ public static class ServiceRegistration
     {
         // ConnectionString definida em appsettings.json, com fallback para dev local.
         var connectionString = configuration.GetConnectionString("MongoDb")
-            ?? "mongodb://nexus:Nexus@2026#@localhost:27017";
+            ?? "mongodb://nexus:Nexus%402026%23@localhost:27017";
 
         // Singleton: uma única instância do MongoClient por aplicação (reuso de conexão pool).
         services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));

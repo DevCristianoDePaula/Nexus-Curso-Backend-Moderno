@@ -4,7 +4,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mongoConn = builder.Configuration.GetConnectionString("ReviewsDb") ?? "mongodb://nexus:Nexus@2026#@localhost:27017";
+?? "mongodb://nexus:Nexus%402026%23@localhost:27017";
 var dbName = builder.Configuration["DatabaseName"] ?? "nexus_reviews";
 
 builder.Services.AddReviewsInfrastructure(mongoConn, dbName);
